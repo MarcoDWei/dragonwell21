@@ -21,4 +21,8 @@
 # or visit www.oracle.com if you need additional information or have any
 # questions.
 #
+<<<<<<< HEAD
 tzdata2024b
+=======
+tzdata2025a
+>>>>>>> jdk-21.0.7+6

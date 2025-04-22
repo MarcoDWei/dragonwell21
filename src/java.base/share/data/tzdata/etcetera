@@ -74,6 +74,13 @@ Link	Etc/GMT				GMT
 # so we moved the names into the Etc subdirectory.
 # Also, the time zone abbreviations are now compatible with %z.
 
+<<<<<<< HEAD
+=======
+# There is no "Etc/Unknown" entry, as CLDR says that "Etc/Unknown"
+# corresponds to an unknown or invalid time zone, and things would get
+# confusing if Etc/Unknown were made valid here.
+
+>>>>>>> jdk-21.0.7+6
 Zone	Etc/GMT-14	14	-	%z
 Zone	Etc/GMT-13	13	-	%z
 Zone	Etc/GMT-12	12	-	%z

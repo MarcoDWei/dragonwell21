@@ -389,9 +389,15 @@ static struct symtab* build_symtab_internal(int fd, const char *filename, bool t
         goto bad;
       }
 
+<<<<<<< HEAD
       // int rslt =
       hcreate_r(htab_sz, symtab->hash_table);
       // guarantee(rslt, "unexpected failure: hcreate_r");
+=======
+      if (hcreate_r(htab_sz, symtab->hash_table) == 0) {
+        goto bad;
+      }
+>>>>>>> jdk-21.0.7+6
 
       // shdr->sh_link points to the section that contains the actual strings
       // for symbol names. the st_name field in ELF_SYM is just the

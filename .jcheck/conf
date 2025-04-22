@@ -1,7 +1,11 @@
 [general]
 project=jdk-updates
 jbs=JDK
+<<<<<<< HEAD
 version=21.0.6
+=======
+version=21.0.7
+>>>>>>> jdk-21.0.7+6
 
 [checks]
 error=author,committer,reviewers,merge,issues,executable,symlink,message,hg-tag,whitespace,problemlists
