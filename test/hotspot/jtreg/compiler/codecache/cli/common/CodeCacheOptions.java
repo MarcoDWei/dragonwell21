@@ -39,6 +39,8 @@ public class CodeCacheOptions {
             = EnumSet.complementOf(NON_SEGMENTED_HEAPS);
     private static final EnumSet<BlobType> ALL_SEGMENTED_HEAPS_WITHOUT_HOT_NON_PROFILED
             = EnumSet.of(BlobType.NonNMethod, BlobType.MethodProfiled, BlobType.MethodNonProfiled);
+    private static final EnumSet<BlobType> ALL_SEGMENTED_HEAPS_WITHOUT_L2HOT_NON_PROFILED
+            = EnumSet.of(BlobType.NonNMethod, BlobType.MethodProfiled, BlobType.MethodNonProfiled, BlobType.MethodHotNonProfiled);
     private static final EnumSet<BlobType> SEGMENTED_HEAPS_WO_PROFILED
             = EnumSet.of(BlobType.NonNMethod, BlobType.MethodNonProfiled);
     private static final EnumSet<BlobType> SEGMENTED_HEAPS_WO_PROFILED_WITH_HOT_NON_PROFILED
@@ -51,6 +53,7 @@ public class CodeCacheOptions {
     public final long nonProfiled;
     public final long profiled;
     public final long hotNonProfiled;
+    public final long l2hotNonProfiled;
     public final boolean segmented;
 
     public static long mB(long val) {
@@ -67,6 +70,7 @@ public class CodeCacheOptions {
         this.nonProfiled = 0;
         this.profiled = 0;
         this.hotNonProfiled = 0;
+        this.l2hotNonProfiled = 0;
         this.segmented = false;
     }
 
@@ -77,6 +81,7 @@ public class CodeCacheOptions {
         this.nonProfiled = nonProfiled;
         this.profiled = profiled;
         this.hotNonProfiled = 0;
+        this.l2hotNonProfiled = 0;
         this.segmented = true;
     }
 
@@ -87,6 +92,18 @@ public class CodeCacheOptions {
         this.nonProfiled = nonProfiled;
         this.profiled = profiled;
         this.hotNonProfiled = hotNonProfiled;
+        this.l2hotNonProfiled = 0;
+        this.segmented = true;
+    }
+
+    public CodeCacheOptions(long reserved, long nonNmethods, long nonProfiled,
+                            long profiled, long hotNonProfiled, long l2hotNonProfiled) {
+        this.reserved = reserved;
+        this.nonNmethods = nonNmethods;
+        this.nonProfiled = nonProfiled;
+        this.profiled = profiled;
+        this.hotNonProfiled = hotNonProfiled;
+        this.l2hotNonProfiled = l2hotNonProfiled;
         this.segmented = true;
     }
 
@@ -102,7 +119,9 @@ public class CodeCacheOptions {
                 return this.profiled;
             case MethodHotNonProfiled:
                 return this.hotNonProfiled;
-            default:
+            case MethodL2HotNonProfiled:
+                return this.l2hotNonProfiled;
+	    default:
                 throw new Error("Unknown heap: " + heap.name());
         }
     }
@@ -126,8 +145,10 @@ public class CodeCacheOptions {
                     CommandLineOptionTest.prepareNumericFlag(
                             BlobType.MethodProfiled.sizeOptionName, profiled),
                     CommandLineOptionTest.prepareNumericFlag(
-                            BlobType.MethodHotNonProfiled.sizeOptionName, hotNonProfiled));
-        }
+                            BlobType.MethodHotNonProfiled.sizeOptionName, hotNonProfiled),
+                    CommandLineOptionTest.prepareNumericFlag(
+                            BlobType.MethodL2HotNonProfiled.sizeOptionName, l2hotNonProfiled));
+	}
         return options.toArray(new String[options.size()]);
     }
 
@@ -135,7 +156,8 @@ public class CodeCacheOptions {
         if (involvedCodeHeaps.isEmpty()
                 || involvedCodeHeaps.equals(NON_SEGMENTED_HEAPS)
                 || involvedCodeHeaps.equals(ALL_SEGMENTED_HEAPS)
-                || involvedCodeHeaps.equals(ALL_SEGMENTED_HEAPS_WITHOUT_HOT_NON_PROFILED)) {
+                || involvedCodeHeaps.equals(ALL_SEGMENTED_HEAPS_WITHOUT_HOT_NON_PROFILED)
+                || involvedCodeHeaps.equals(ALL_SEGMENTED_HEAPS_WITHOUT_L2HOT_NON_PROFILED)) {
             return this;
         } else if (involvedCodeHeaps.equals(SEGMENTED_HEAPS_WO_PROFILED)) {
             return new CodeCacheOptions(reserved, nonNmethods,

@@ -46,6 +46,9 @@
           "Size of hot code heap with non-profiled methods (in bytes)")        \
           range(0, max_uintx)                                                  \
                                                                                \
+  product(uintx, NonProfiledL2HotCodeHeapSize, 0,                              \
+          "Size of L2 hot code heap with non-profiled methods (in bytes)")     \
+                                                                               \
   product(bool, AllocIVtableStubInNonProfiledHotCodeHeap, false,               \
           "Allocate itable/vtable in NonProfiledHotCodeHeap")                  \
 

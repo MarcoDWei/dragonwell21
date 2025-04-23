@@ -114,7 +114,7 @@ class CodeCache : AllStatic {
   // Check the code heap sizes set by the user via command line
   static void check_heap_sizes(size_t non_nmethod_size, size_t profiled_size,
                                size_t non_profiled_size, size_t cache_size,
-                               size_t non_profiled_hot_size, bool all_set);
+                               size_t non_profiled_hot_size, size_t non_profiled_l2hot_size, bool all_set);
   // Creates a new heap with the given name and size, containing CodeBlobs of the given type
   static void add_heap(ReservedSpace rs, const char* name, CodeBlobType code_blob_type);
   static CodeHeap* get_code_heap_containing(void* p);         // Returns the CodeHeap containing the given pointer, or nullptr
@@ -302,11 +302,13 @@ class CodeCache : AllStatic {
   }
 
   // Returns the codeBlobType for the given method and compilation level
-  static CodeBlobType get_code_blob_type(const methodHandle& method, int comp_level, bool alloc_in_non_profiled_hot_code_heap) {
+  static CodeBlobType get_code_blob_type(const methodHandle& method, int comp_level, bool alloc_in_non_profiled_hot_code_heap, int hot_level) {
     if (alloc_in_non_profiled_hot_code_heap && is_c2_compile(comp_level)) {
       if (!method->is_native()) {
-        if (CodeCache::heap_available(CodeBlobType::MethodHotNonProfiled)) {
+        if (hot_level == 1 && CodeCache::heap_available(CodeBlobType::MethodHotNonProfiled)) {
           return CodeBlobType::MethodHotNonProfiled;
+        } else if (hot_level == 2 && CodeCache::heap_available(CodeBlobType::MethodL2HotNonProfiled)) {
+          return CodeBlobType::MethodL2HotNonProfiled;
         }
       }
     }

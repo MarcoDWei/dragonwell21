@@ -435,6 +435,7 @@ void Compilation::install_code(int frame_size) {
     SharedRuntime::is_wide_vector(max_vector_size()),
     has_monitors(),
     false,
+    0,
     _immediate_oops_patched
   );
 }

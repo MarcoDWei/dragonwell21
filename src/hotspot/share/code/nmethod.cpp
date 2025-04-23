@@ -582,7 +582,8 @@ nmethod* nmethod::new_nmethod(const methodHandle& method,
   ImplicitExceptionTable* nul_chk_table,
   AbstractCompiler* compiler,
   CompLevel comp_level,
-  bool alloc_in_non_profiled_hot_code_heap
+  bool alloc_in_non_profiled_hot_code_heap,
+  int hot_level
 #if INCLUDE_JVMCI
   , char* speculations,
   int speculations_len,
@@ -623,7 +624,7 @@ nmethod* nmethod::new_nmethod(const methodHandle& method,
   {
     MutexLocker mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
 
-    CodeBlobType code_blob_type = CodeCache::get_code_blob_type(method, comp_level, alloc_in_non_profiled_hot_code_heap);
+    CodeBlobType code_blob_type = CodeCache::get_code_blob_type(method, comp_level, alloc_in_non_profiled_hot_code_heap, hot_level);
 
     nm = new (nmethod_size, code_blob_type)
     nmethod(method(), compiler->type(), nmethod_size, immutable_data_size,

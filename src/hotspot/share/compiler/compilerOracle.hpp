@@ -75,6 +75,7 @@ class methodHandle;
   option(ControlIntrinsic,  "ControlIntrinsic",  Ccstrlist) \
   option(DisableIntrinsic,  "DisableIntrinsic",  Ccstrlist) \
   option(AllocInNonProfiledHotCodeHeap, "AllocInNonProfiledHotCodeHeap", Bool) \
+  option(HotLevel, "HotLevel", Intx) \
   option(NoRTMLockEliding,  "NoRTMLockEliding",  Bool) \
   option(UseRTMLockEliding, "UseRTMLockEliding", Bool) \
   option(BlockLayoutByFrequency, "BlockLayoutByFrequency", Bool) \
