@@ -352,7 +352,8 @@ class nmethod : public CompiledMethod {
                               ImplicitExceptionTable* nul_chk_table,
                               AbstractCompiler* compiler,
                               CompLevel comp_level,
-                              bool alloc_in_non_profiled_hot_code_heap
+                              bool alloc_in_non_profiled_hot_code_heap,
+                              int hot_level
 #if INCLUDE_JVMCI
                               , char* speculations = nullptr,
                               int speculations_len = 0,

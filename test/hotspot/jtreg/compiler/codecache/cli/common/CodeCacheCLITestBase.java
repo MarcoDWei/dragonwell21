@@ -51,7 +51,11 @@ public class CodeCacheCLITestBase {
                     CodeCacheOptions.mB(50), CodeCacheOptions.mB(10)),
             new CodeCacheOptions(CodeCacheOptions.mB(400),
                     CodeCacheOptions.mB(100), CodeCacheOptions.mB(100),
-                    CodeCacheOptions.mB(100), CodeCacheOptions.mB(100))
+                    CodeCacheOptions.mB(100), CodeCacheOptions.mB(100)),
+            new CodeCacheOptions(CodeCacheOptions.mB(400),
+                    CodeCacheOptions.mB(100), CodeCacheOptions.mB(100),
+                    CodeCacheOptions.mB(100), CodeCacheOptions.mB(50),
+                    CodeCacheOptions.mB(50))
     };
 
     private final CodeCacheCLITestCase[] testCases;

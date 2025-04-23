@@ -43,12 +43,22 @@ public enum BlobType {
         @Override
         public boolean allowTypeWhenOverflow(BlobType type) {
             return super.allowTypeWhenOverflow(type)
+                    || type == BlobType.MethodL2HotNonProfiled
+		    || type == BlobType.MethodNonProfiled
+                    || type == BlobType.MethodProfiled;
+        }
+    },
+    // Execution level 4 (non-profiled l2 hot) nmethods (without native nmethods)
+    MethodL2HotNonProfiled(2, "CodeHeap 'non-profiled l2 hot nmethods'", "NonProfiledL2HotCodeHeapSize") {
+        @Override
+        public boolean allowTypeWhenOverflow(BlobType type) {
+            return super.allowTypeWhenOverflow(type)
                     || type == BlobType.MethodNonProfiled
                     || type == BlobType.MethodProfiled;
         }
     },
     // Execution level 2 and 3 (profiled) nmethods
-    MethodProfiled(2, "CodeHeap 'profiled nmethods'", "ProfiledCodeHeapSize") {
+    MethodProfiled(3, "CodeHeap 'profiled nmethods'", "ProfiledCodeHeapSize") {
         @Override
         public boolean allowTypeWhenOverflow(BlobType type) {
             return super.allowTypeWhenOverflow(type)
@@ -56,7 +66,7 @@ public enum BlobType {
         }
     },
     // Non-nmethods like Buffers, Adapters and Runtime Stubs
-    NonNMethod(3, "CodeHeap 'non-nmethods'", "NonNMethodCodeHeapSize") {
+    NonNMethod(4, "CodeHeap 'non-nmethods'", "NonNMethodCodeHeapSize") {
         @Override
         public boolean allowTypeWhenOverflow(BlobType type) {
             return super.allowTypeWhenOverflow(type)
@@ -65,7 +75,7 @@ public enum BlobType {
         }
     },
     // All types (No code cache segmentation)
-    All(4, "CodeCache", "ReservedCodeCacheSize");
+    All(5, "CodeCache", "ReservedCodeCacheSize");
 
     public final int id;
     public final String sizeOptionName;
@@ -110,6 +120,9 @@ public enum BlobType {
         }
         if (whiteBox.getUintxVMFlag("NonProfiledHotCodeHeapSize") == 0) {
             result.remove(MethodHotNonProfiled);
+        }
+        if (whiteBox.getUintxVMFlag("NonProfiledL2HotCodeHeapSize") == 0) {
+            result.remove(MethodL2HotNonProfiled);
         }
         return result;
     }

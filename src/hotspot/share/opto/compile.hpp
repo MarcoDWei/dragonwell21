@@ -344,6 +344,7 @@ class Compile : public Phase {
   int                   _loop_opts_cnt;         // loop opts round
   bool                  _clinit_barrier_on_entry; // True if clinit barrier is needed on nmethod entry
   bool                  _alloc_in_non_profiled_hot_code_heap;
+  int                   _hot_level;
   uint                  _stress_seed;           // Seed for stress testing
 
   // Compilation environment.
@@ -642,6 +643,8 @@ class Compile : public Phase {
   void          set_clinit_barrier_on_entry(bool z) { _clinit_barrier_on_entry = z; }
   bool              alloc_in_non_profiled_hot_code_heap() const { return _alloc_in_non_profiled_hot_code_heap; }
   void          set_alloc_in_non_profiled_hot_code_heap(bool z) { _alloc_in_non_profiled_hot_code_heap = z; }
+  int              hot_level() const { return _hot_level; }
+  void          set_hot_level(int z) { _hot_level = z; }
   bool              has_monitors() const         { return _has_monitors; }
   void          set_has_monitors(bool v)         { _has_monitors = v; }
 

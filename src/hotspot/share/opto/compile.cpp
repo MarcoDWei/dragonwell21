@@ -618,6 +618,7 @@ Compile::Compile( ciEnv* ci_env, ciMethod* target, int osr_bci,
                   _has_method_handle_invokes(false),
                   _clinit_barrier_on_entry(false),
                   _alloc_in_non_profiled_hot_code_heap(false),
+                  _hot_level(0),
                   _stress_seed(0),
                   _comp_arena(mtCompiler),
                   _barrier_set_state(BarrierSet::barrier_set()->barrier_set_c2()->create_barrier_state(comp_arena())),
@@ -697,7 +698,9 @@ Compile::Compile( ciEnv* ci_env, ciMethod* target, int osr_bci,
   }
   if (NonProfiledHotCodeHeapSize) {
     set_alloc_in_non_profiled_hot_code_heap(directive->AllocInNonProfiledHotCodeHeapOption);
+    set_hot_level(directive->HotLevelOption);
   }
+
   set_print_inlining(directive->PrintInliningOption || PrintOptoInlining);
   set_print_intrinsics(directive->PrintIntrinsicsOption);
   set_has_irreducible_loop(true); // conservative until build_loop_tree() reset it

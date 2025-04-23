@@ -40,14 +40,19 @@ import java.util.function.Function;
  */
 public class CodeCacheCLITestCase {
     private static final Function<CodeCacheOptions, Boolean> ONLY_SEGMENTED
-            = options -> options.segmented && options.hotNonProfiled == 0;
+            = options -> options.segmented && options.hotNonProfiled == 0 && options.l2hotNonProfiled == 0;
     private static final Function<CodeCacheOptions, Boolean> ONLY_SEGMENTED_WITH_HOT_NON_PROFILED
-            = options -> options.segmented && options.hotNonProfiled != 0;
+            = options -> options.segmented && options.hotNonProfiled != 0 && options.l2hotNonProfiled == 0;
+    private static final Function<CodeCacheOptions, Boolean> ONLY_SEGMENTED_WITH_L2HOT_NON_PROFILED
+            = options -> options.segmented && options.hotNonProfiled != 0 && options.l2hotNonProfiled != 0;
     private static final Function<CodeCacheOptions, Boolean> SEGMENTED_SERVER
             = ONLY_SEGMENTED.andThen(isSegmented -> isSegmented
                     && Platform.isServer() && Platform.isTieredSupported());
     private static final Function<CodeCacheOptions, Boolean> SEGMENTED_SERVER_WITH_HOT_NON_PROFILED
             = ONLY_SEGMENTED_WITH_HOT_NON_PROFILED.andThen(isSegmented -> isSegmented
+                    && Platform.isServer() && Platform.isTieredSupported());
+    private static final Function<CodeCacheOptions, Boolean> SEGMENTED_SERVER_WITH_L2HOT_NON_PROFILED
+            = ONLY_SEGMENTED_WITH_L2HOT_NON_PROFILED.andThen(isSegmented -> isSegmented
                     && Platform.isServer() && Platform.isTieredSupported());
     private static final String USE_INT_MODE = "-Xint";
     private static final String SEGMENTED_CODE_CACHE = "SegmentedCodeCache";
@@ -130,6 +135,11 @@ public class CodeCacheCLITestCase {
                         true),
                 CommandLineOptionTest.prepareNumericFlag(TIERED_STOP_AT, 4)),
         TIERED_LEVEL_4_FOR_HOT_NON_PROFILED(SEGMENTED_SERVER_WITH_HOT_NON_PROFILED,
+                EnumSet.of(BlobType.NonNMethod, BlobType.MethodProfiled, BlobType.MethodNonProfiled, BlobType.MethodHotNonProfiled),
+                CommandLineOptionTest.prepareBooleanFlag(TIERED_COMPILATION,
+                        true),
+                CommandLineOptionTest.prepareNumericFlag(TIERED_STOP_AT, 4)),
+        TIERED_LEVEL_4_FOR_L2HOT_NON_PROFILED(SEGMENTED_SERVER_WITH_L2HOT_NON_PROFILED,
                 EnumSet.complementOf(EnumSet.of(BlobType.All)),
                 CommandLineOptionTest.prepareBooleanFlag(TIERED_COMPILATION,
                         true),

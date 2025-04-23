@@ -77,6 +77,7 @@ NOT_PRODUCT(cflags(IGVPrintLevel,       intx, PrintIdealGraphLevel, IGVPrintLeve
     cflags(VectorizeDebug,          uintx, 0, VectorizeDebug) \
     cflags(IncrementalInlineForceCleanup, bool, IncrementalInlineForceCleanup, IncrementalInlineForceCleanup) \
     cflags(AllocInNonProfiledHotCodeHeap, bool, false, AllocInNonProfiledHotCodeHeap) \
+    cflags(HotLevel, intx, 0, HotLevel) \
     cflags(MaxNodeLimit,            intx, MaxNodeLimit, MaxNodeLimit)
 #else
   #define compilerdirectives_c2_flags(cflags)

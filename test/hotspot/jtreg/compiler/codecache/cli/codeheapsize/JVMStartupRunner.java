@@ -63,11 +63,13 @@ public class JVMStartupRunner implements CodeCacheCLITestCase.Runner {
             throws Throwable {
         verifyHeapSizesSum(options.reserved,
                 scaleCodeHeapSize(options.profiled), options.nonProfiled,
-                options.nonNmethods, options.hotNonProfiled);
+                options.nonNmethods, options.hotNonProfiled, options.l2hotNonProfiled);
         verifyHeapSizesSum(options.reserved, options.profiled,
-                scaleCodeHeapSize(options.nonProfiled), options.nonNmethods, options.hotNonProfiled);
+                scaleCodeHeapSize(options.nonProfiled), options.nonNmethods,
+                options.hotNonProfiled, options.l2hotNonProfiled);
         verifyHeapSizesSum(options.reserved, options.profiled,
-                options.nonProfiled, scaleCodeHeapSize(options.nonNmethods), options.hotNonProfiled);
+                options.nonProfiled, scaleCodeHeapSize(options.nonNmethods),
+                options.hotNonProfiled, options.l2hotNonProfiled);
     }
 
     /**
@@ -81,20 +83,24 @@ public class JVMStartupRunner implements CodeCacheCLITestCase.Runner {
         long nonProfiled = options.nonProfiled;
         long nonNMethods = options.nonNmethods;
         long hotNonProfiled = options.hotNonProfiled;
+        long l2hotNonProfiled = options.l2hotNonProfiled;
 
-        while (options.reserved == profiled + nonProfiled + nonNMethods + hotNonProfiled) {
+        while (options.reserved == profiled + nonProfiled + nonNMethods +
+                hotNonProfiled + l2hotNonProfiled) {
             profiled = scaleCodeHeapSize(profiled);
             nonProfiled = scaleCodeHeapSize(nonProfiled);
             nonNMethods = scaleCodeHeapSize(nonNMethods);
             hotNonProfiled = scaleCodeHeapSize(hotNonProfiled);
-        }
+            l2hotNonProfiled = scaleCodeHeapSize(l2hotNonProfiled);
+	}
 
         verifyHeapSizesSum(options.reserved, profiled, nonProfiled,
-                nonNMethods, hotNonProfiled);
+                nonNMethods, hotNonProfiled, l2hotNonProfiled);
     }
 
     private static void verifyHeapSizesSum(long reserved, long profiled,
-            long nonProfiled, long nonNmethods, long hotNonProfiled) throws Throwable {
+            long nonProfiled, long nonNmethods, long hotNonProfiled,
+            long l2hotNonProfiled) throws Throwable {
         // JVM startup expected to fail when
         // sum(all code heap sizes) != reserved CC size
         CommandLineOptionTest.verifySameJVMStartup(
@@ -115,7 +121,9 @@ public class JVMStartupRunner implements CodeCacheCLITestCase.Runner {
                 CommandLineOptionTest.prepareNumericFlag(
                         BlobType.NonNMethod.sizeOptionName, nonNmethods),
                 CommandLineOptionTest.prepareNumericFlag(
-                        BlobType.MethodHotNonProfiled.sizeOptionName, hotNonProfiled));
+                        BlobType.MethodHotNonProfiled.sizeOptionName, hotNonProfiled),
+                CommandLineOptionTest.prepareNumericFlag(
+                        BlobType.MethodL2HotNonProfiled.sizeOptionName, l2hotNonProfiled));
     }
 
     /**
