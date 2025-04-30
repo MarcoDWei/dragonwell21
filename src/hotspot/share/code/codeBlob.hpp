@@ -42,12 +42,13 @@ class OopMapSet;
 // CodeBlob Types
 // Used in the CodeCache to assign CodeBlobs to different CodeHeaps
 enum class CodeBlobType {
-  MethodNonProfiled    = 0,    // Execution level 1 and 4 (non-profiled) nmethods (including native nmethods)
-  MethodHotNonProfiled = 1,    // Hottest nmethods with NonProfiled
-  MethodProfiled       = 2,    // Execution level 2 and 3 (profiled) nmethods
-  NonNMethod           = 3,    // Non-nmethods like Buffers, Adapters and Runtime Stubs
-  All                  = 4,    // All types (No code cache segmentation)
-  NumTypes             = 5     // Number of CodeBlobTypes
+  MethodNonProfiled       = 0,    // Execution level 1 and 4 (non-profiled) nmethods
+  MethodSimpleNonProfiled = 1,    // Execution level 1 (non-profiled) nmethods (including native nmethods)
+  MethodHotNonProfiled    = 2,    // Hottest nmethods with NonProfiled
+  MethodProfiled          = 3,    // Execution level 2 and 3 (profiled) nmethods
+  NonNMethod              = 4,    // Non-nmethods like Buffers, Adapters and Runtime Stubs
+  All                     = 5,    // All types (No code cache segmentation)
+  NumTypes                = 6     // Number of CodeBlobTypes
 };
 
 // CodeBlob - superclass for all entries in the CodeCache.

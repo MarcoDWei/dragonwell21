@@ -179,15 +179,15 @@ GrowableArray<CodeHeap*>* CodeCache::_nmethod_heaps = new(mtCode) GrowableArray<
 GrowableArray<CodeHeap*>* CodeCache::_allocable_heaps = new(mtCode) GrowableArray<CodeHeap*> (static_cast<int>(CodeBlobType::All), mtCode);
 
 void CodeCache::check_heap_sizes(size_t non_nmethod_size, size_t profiled_size,
-                                 size_t non_profiled_size, size_t non_profiled_hot_size,
+                                 size_t non_profiled_size, size_t simple_non_profiled_size, size_t non_profiled_hot_size,
                                  size_t cache_size, bool all_set) {
-  size_t total_size = non_nmethod_size + profiled_size + non_profiled_size + non_profiled_hot_size;
+  size_t total_size = non_nmethod_size + profiled_size + non_profiled_size + simple_non_profiled_size + non_profiled_hot_size;
   // Prepare error message
   const char* error = "Invalid code heap sizes";
   err_msg message("NonNMethodCodeHeapSize (" SIZE_FORMAT "K) + ProfiledCodeHeapSize (" SIZE_FORMAT "K)"
-                  " + NonProfiledCodeHeapSize (" SIZE_FORMAT "K) + ProfiledHotCodeHeapSize (" SIZE_FORMAT "K)"
+                  " + NonProfiledCodeHeapSize (" SIZE_FORMAT "K) + Simple_NonProfiledCodeHeapSize (" SIZE_FORMAT "K) + ProfiledHotCodeHeapSize (" SIZE_FORMAT "K)"
                   " = " SIZE_FORMAT "K",
-          non_nmethod_size/K, profiled_size/K, non_profiled_size/K, non_profiled_hot_size/K, total_size/K);
+          non_nmethod_size/K, profiled_size/K, non_profiled_size/K, simple_non_profiled_size/K, non_profiled_hot_size/K, total_size/K);
 
   if (total_size > cache_size) {
     // Some code heap sizes were explicitly set: total_size must be <= cache_size
@@ -202,25 +202,28 @@ void CodeCache::check_heap_sizes(size_t non_nmethod_size, size_t profiled_size,
 
 // Modify this function directly for easy review.
 void CodeCache::initialize_heaps() {
-  bool non_nmethod_set      = FLAG_IS_CMDLINE(NonNMethodCodeHeapSize);
-  bool profiled_set         = FLAG_IS_CMDLINE(ProfiledCodeHeapSize);
-  bool non_profiled_set     = FLAG_IS_CMDLINE(NonProfiledCodeHeapSize);
-  bool non_profiled_hot_set = FLAG_IS_CMDLINE(NonProfiledHotCodeHeapSize);
+  bool non_nmethod_set         = FLAG_IS_CMDLINE(NonNMethodCodeHeapSize);
+  bool profiled_set            = FLAG_IS_CMDLINE(ProfiledCodeHeapSize);
+  bool non_profiled_set        = FLAG_IS_CMDLINE(NonProfiledCodeHeapSize);
+  bool simple_non_profiled_set = FLAG_IS_CMDLINE(SimpleNonProfiledCodeHeapSize);
+  bool non_profiled_hot_set    = FLAG_IS_CMDLINE(NonProfiledHotCodeHeapSize);
 
   size_t min_size           = os::vm_page_size();
   size_t cache_size         = ReservedCodeCacheSize;
   size_t non_nmethod_size   = NonNMethodCodeHeapSize;
   size_t profiled_size      = ProfiledCodeHeapSize;
   size_t non_profiled_size  = NonProfiledCodeHeapSize;
+  size_t simple_non_profiled_size  = SimpleNonProfiledCodeHeapSize;
   size_t non_profiled_hot_size = NonProfiledHotCodeHeapSize;
 
   // Check if total size set via command line flags exceeds the reserved size
   check_heap_sizes((non_nmethod_set  ? non_nmethod_size  : min_size),
                    (profiled_set     ? profiled_size     : min_size),
                    (non_profiled_set ? non_profiled_size : min_size),
+                   simple_non_profiled_set,
                    non_profiled_hot_size,
                    cache_size,
-                   non_nmethod_set && profiled_set && non_profiled_set && non_profiled_hot_set);
+                   non_nmethod_set && profiled_set && non_profiled_set && simple_non_profiled_set && non_profiled_hot_set);
 
   const size_t ps = page_size(false, 8);
   const size_t alignment = MAX2(ps, os::vm_allocation_granularity());
@@ -228,8 +231,13 @@ void CodeCache::initialize_heaps() {
     // Firstly meet the requirement of NonProfiledHotCodeHeapSize
     non_profiled_hot_size = align_up(non_profiled_hot_size, alignment);
     cache_size -= non_profiled_hot_size;
-  } else {
+  } else if (simple_non_profiled_set) {
+    // Secondly meet the requirement of SimpleNonProfiledCodeHeapSize
+    simple_non_profiled_size = align_up(simple_non_profiled_size, alignment);
+    cache_size -= simple_non_profiled_size;
+  }else {
     assert(non_profiled_hot_size == 0, "Default value of NonProfiledHotCodeHeapSize should be 0");
+    assert(simple_non_profiled_size == 0, "Default value of SimpleNonProfiledCodeHeapSize should be 0");
   }
 
   // Determine size of compiler buffers
@@ -311,10 +319,18 @@ void CodeCache::initialize_heaps() {
     non_profiled_size += profiled_size;
     profiled_size = 0;
   }
+
   // We do not need the non-profiled CodeHeap, use all space for the non-nmethod CodeHeap
   if (!heap_available(CodeBlobType::MethodNonProfiled)) {
     non_nmethod_size += non_profiled_size;
     non_profiled_size = 0;
+  }
+
+  // We do not need the Simple non-profiled CodeHeap, use all space for the non-nmethod CodeHeap
+  if (!heap_available(CodeBlobType::MethodSimpleNonProfiled)) {
+    non_nmethod_size += simple_non_profiled_size;
+    cache_size += simple_non_profiled_size;
+    simple_non_profiled_size = 0;
   }
   // We do not need the non-profiled HotCodeHeap, use all space for the non-nmethod CodeHeap
   if (!heap_available(CodeBlobType::MethodHotNonProfiled)) {
@@ -333,13 +349,15 @@ void CodeCache::initialize_heaps() {
 
   // Recover cache_size for the following operation after the initialization of all sizes of segmentation
   cache_size += non_profiled_hot_size;
+  cache_size += simple_non_profiled_size;
 
   // Verify sizes and update flag values
-  assert(non_profiled_size + non_profiled_hot_size + profiled_size + non_nmethod_size == cache_size,
+  assert(non_profiled_size + simple_non_profiled_size + non_profiled_hot_size + profiled_size + non_nmethod_size == cache_size,
       "Invalid code heap sizes");
   FLAG_SET_ERGO(NonNMethodCodeHeapSize, non_nmethod_size);
   FLAG_SET_ERGO(ProfiledCodeHeapSize, profiled_size);
   FLAG_SET_ERGO(NonProfiledCodeHeapSize, non_profiled_size);
+  FLAG_SET_ERGO(SimpleNonProfiledCodeHeapSize, simple_non_profiled_size);
   FLAG_SET_ERGO(NonProfiledHotCodeHeapSize, non_profiled_hot_size);
 
   if (AllocIVtableStubInNonProfiledHotCodeHeap) {
@@ -375,6 +393,8 @@ void CodeCache::initialize_heaps() {
   ReservedCodeSpace rs = reserve_heap_memory(cache_size, ps);
   ReservedSpace profiled_space      = rs.first_part(profiled_size);
   ReservedSpace rest                = rs.last_part(profiled_size);
+  ReservedSpace simple_non_profiled_space    = rest.first_part(simple_non_profiled_size);
+  rest = rest.last_part(simple_non_profiled_size);
   ReservedSpace non_method_space    = rest.first_part(non_nmethod_size);
   rest = rest.last_part(non_nmethod_size);
   ReservedSpace non_profiled_hot_space  = rest.first_part(non_profiled_hot_size);
@@ -389,6 +409,8 @@ void CodeCache::initialize_heaps() {
   add_heap(profiled_space, "CodeHeap 'profiled nmethods'", CodeBlobType::MethodProfiled);
   // Tier 1 and tier 4 (non-profiled) methods and native methods
   add_heap(non_profiled_space, "CodeHeap 'non-profiled nmethods'", CodeBlobType::MethodNonProfiled);
+  // Tier 1 (non-profiled) methods
+  add_heap(simple_non_profiled_space, "CodeHeap 'simple non-profiled nmethods'", CodeBlobType::MethodSimpleNonProfiled);
   // non-profiled hot methods
   add_heap(non_profiled_hot_space, "CodeHeap 'non-profiled hot nmethods'", CodeBlobType::MethodHotNonProfiled);
 }
@@ -428,6 +450,10 @@ bool CodeCache::heap_available(CodeBlobType code_blob_type) {
     if (!NonProfiledHotCodeHeapSize) {
       return false;
     }
+  } else if (code_blob_type == CodeBlobType::MethodSimpleNonProfiled) {
+    if (!SimpleNonProfiledCodeHeapSize) {
+      return false;
+    }
   }
 
   if (!SegmentedCodeCache) {
@@ -443,7 +469,8 @@ bool CodeCache::heap_available(CodeBlobType code_blob_type) {
     // No TieredCompilation: we only need the non-nmethod and non-profiled code heap
     return (code_blob_type == CodeBlobType::NonNMethod) ||
            (code_blob_type == CodeBlobType::MethodNonProfiled) ||
-           (code_blob_type == CodeBlobType::MethodHotNonProfiled);
+           (code_blob_type == CodeBlobType::MethodHotNonProfiled) ||
+           (code_blob_type == CodeBlobType::MethodSimpleNonProfiled);
   }
 }
 
@@ -454,6 +481,9 @@ const char* CodeCache::get_code_heap_flag_name(CodeBlobType code_blob_type) {
     break;
   case CodeBlobType::MethodNonProfiled:
     return "NonProfiledCodeHeapSize";
+    break;
+  case CodeBlobType::MethodSimpleNonProfiled:
+    return "SimpleNonProfiledHeapSize";
     break;
   case CodeBlobType::MethodHotNonProfiled:
     return "NonProfiledHotCodeHeapSize";
@@ -593,13 +623,17 @@ CodeBlob* CodeCache::allocate(int size, CodeBlobType code_blob_type, bool handle
       // Expansion failed
       if (SegmentedCodeCache) {
         // Fallback solution: Try to store code in another code heap.
-        // NonNMethod -> MethodNonProfiled -> MethodProfiled (-> MethodNonProfiled)
+        // NonNMethod -> MethodSimpleNonProfiled -> MethodNonProfiled -> MethodProfiled (-> MethodSimpleNonProfiled)
+        // MethodHotNonProfiled -> -> MethodNonProfiled -> MethodProfiled (-> MethodSimpleNonProfiled)
         CodeBlobType type = code_blob_type;
         switch (type) {
         case CodeBlobType::MethodHotNonProfiled:
           type = CodeBlobType::MethodNonProfiled;
           break;
         case CodeBlobType::NonNMethod:
+          type = CodeBlobType::MethodSimpleNonProfiled;
+          break;
+        case CodeBlobType::MethodSimpleNonProfiled:
           type = CodeBlobType::MethodNonProfiled;
           break;
         case CodeBlobType::MethodNonProfiled:
@@ -608,7 +642,7 @@ CodeBlob* CodeCache::allocate(int size, CodeBlobType code_blob_type, bool handle
         case CodeBlobType::MethodProfiled:
           // Avoid loop if we already tried that code heap
           if (type == orig_code_blob_type) {
-            type = CodeBlobType::MethodNonProfiled;
+            type = CodeBlobType::MethodSimpleNonProfiled;
           }
           break;
         default:
@@ -1162,8 +1196,8 @@ size_t CodeCache::max_distance_to_non_nmethod() {
     return ReservedCodeCacheSize;
   } else {
     CodeHeap* blob = get_code_heap(CodeBlobType::NonNMethod);
-    // the max distance is minimized by placing the NonNMethod segment
-    // in between MethodProfiled and MethodNonProfiled segments
+    // the max distance is minimized by placing the NonNMethod segment in between
+    // MethodProfiled/MethodSimpleNonProfiled and MethodNonProfiled segments
     size_t dist1 = (size_t)blob->high() - (size_t)_low_bound;
     size_t dist2 = (size_t)_high_bound - (size_t)blob->low();
     return dist1 > dist2 ? dist1 : dist2;
@@ -1234,6 +1268,7 @@ void CodeCache::initialize() {
     // Use a single code heap
     FLAG_SET_ERGO(NonNMethodCodeHeapSize, (uintx)os::vm_page_size());
     FLAG_SET_ERGO(ProfiledCodeHeapSize, 0);
+    FLAG_SET_ERGO(SimpleNonProfiledCodeHeapSize, 0);
     FLAG_SET_ERGO(NonProfiledCodeHeapSize, 0);
     FLAG_SET_ERGO(NonProfiledHotCodeHeapSize, 0);
     ReservedCodeSpace rs = reserve_heap_memory(ReservedCodeCacheSize, page_size(false, 8));

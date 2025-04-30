@@ -1554,6 +1554,10 @@ const int ObjectAlignmentInBytes = 8;
           "Size of code heap with non-profiled methods (in bytes)")         \
           range(0, max_uintx)                                               \
                                                                             \
+  product_pd(uintx, SimpleNonProfiledCodeHeapSize,                          \
+          "Size of code heap with simple non-profiled methods (in bytes)")  \
+          range(0, max_uintx)                                               \
+                                                                            \
   product_pd(uintx, ProfiledCodeHeapSize,                                   \
           "Size of code heap with profiled methods (in bytes)")             \
           range(0, max_uintx)                                               \

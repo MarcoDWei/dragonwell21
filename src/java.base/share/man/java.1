@@ -2405,6 +2405,13 @@ This code type stays in the code cache forever.
 This flag is used only if \f[V]-XX:SegmentedCodeCache\f[R] is enabled.
 .RE
 .TP
+\f[V]-XX:SimpleNonProfiledCodeHeapSize=\f[R]\f[I]size\f[R]
+Sets the size in bytes of the code segment containing simple nonprofiled methods.
+.RS
+.PP
+This flag is used only if `-XX:SegmentedCodeCache` is enabled.
+.RE
+.TP
 \f[V]-XX:NonProfiledCodeHeapSize=\f[R]\f[I]size\f[R]
 Sets the size in bytes of the code segment containing nonprofiled
 methods.

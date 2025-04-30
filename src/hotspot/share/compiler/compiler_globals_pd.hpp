@@ -44,6 +44,8 @@
 //#include "jvmci/jvmci_globals_pd.hpp"
 //#endif
 
+define_pd_global(uintx,  SimpleNonProfiledCodeHeapSize,    0);
+
 #if !defined(COMPILER1) && !defined(COMPILER2) && !INCLUDE_JVMCI
 define_pd_global(bool, BackgroundCompilation,        false);
 define_pd_global(bool, CICompileOSR,                 false);

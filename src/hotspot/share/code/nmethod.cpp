@@ -845,8 +845,8 @@ void* nmethod::operator new(size_t size, int nmethod_size, CodeBlobType code_blo
 }
 
 void* nmethod::operator new(size_t size, int nmethod_size, bool allow_NonNMethod_space) throw () {
-  // Try MethodNonProfiled and MethodProfiled.
-  void* return_value = CodeCache::allocate(nmethod_size, CodeBlobType::MethodNonProfiled);
+  // Try MethodSimpleNonProfiled, MethodNonProfiled and MethodProfiled.
+  void* return_value = CodeCache::allocate(nmethod_size, CodeCache::heap_available(CodeBlobType::MethodSimpleNonProfiled)?CodeBlobType::MethodSimpleNonProfiled:CodeBlobType::MethodNonProfiled);
   if (return_value != nullptr || !allow_NonNMethod_space) return return_value;
   // Try NonNMethod or give up.
   return CodeCache::allocate(nmethod_size, CodeBlobType::NonNMethod);

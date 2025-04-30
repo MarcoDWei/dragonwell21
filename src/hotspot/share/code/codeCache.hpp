@@ -113,7 +113,7 @@ class CodeCache : AllStatic {
   static void initialize_heaps();                             // Initializes the CodeHeaps
   // Check the code heap sizes set by the user via command line
   static void check_heap_sizes(size_t non_nmethod_size, size_t profiled_size,
-                               size_t non_profiled_size, size_t cache_size,
+                               size_t non_profiled_size, size_t simple_non_profiled_size, size_t cache_size,
                                size_t non_profiled_hot_size, bool all_set);
   // Creates a new heap with the given name and size, containing CodeBlobs of the given type
   static void add_heap(ReservedSpace rs, const char* name, CodeBlobType code_blob_type);
@@ -284,10 +284,11 @@ class CodeCache : AllStatic {
     return type <= CodeBlobType::All;
   }
 
-
   // Returns the CodeBlobType for the given compilation level
   static CodeBlobType get_code_blob_type(int comp_level) {
-    if (comp_level == CompLevel_none ||
+    if (comp_level == CompLevel_simple && CodeCache::heap_available(CodeBlobType::MethodSimpleNonProfiled)) {
+        return CodeBlobType::MethodSimpleNonProfiled;
+    } else if (comp_level == CompLevel_none ||
         comp_level == CompLevel_simple ||
         comp_level == CompLevel_full_optimization) {
       // Non profiled methods
@@ -311,7 +312,7 @@ class CodeCache : AllStatic {
       }
     }
     return get_code_blob_type(comp_level);
-  }
+}
 
   static void verify_clean_inline_caches();
   static void verify_icholder_relocations();

@@ -691,6 +691,7 @@ TRACE_REQUEST_FUNC(CodeCacheConfiguration) {
   event.set_reservedSize(ReservedCodeCacheSize);
   event.set_nonNMethodSize(NonNMethodCodeHeapSize);
   event.set_profiledSize(ProfiledCodeHeapSize);
+  event.set_simpleNonProfiledSize(SimpleNonProfiledCodeHeapSize);
   event.set_nonProfiledSize(NonProfiledCodeHeapSize);
   event.set_expansionSize(CodeCacheExpansionSize);
   event.set_minBlockLength(CodeCacheMinBlockLength);
