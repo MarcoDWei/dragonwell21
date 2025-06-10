@@ -22,7 +22,7 @@
  *
  */
 
-#include "simdsort-support.hpp"
+#include "simdsort-support-x86.hpp"
 #ifdef __SIMDSORT_SUPPORTED_LINUX
 
 #pragma GCC target("avx2")

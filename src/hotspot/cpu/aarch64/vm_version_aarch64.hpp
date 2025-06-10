@@ -180,6 +180,14 @@ enum Ampere_CPU_Model {
 
   static bool supports_float16() { return true; }
 
+  static bool supports_sve_simdsort() {
+    if (VM_Version::supports_sve2()) {
+	  return true;
+	}else {
+      return false;
+    }
+  }
+
 #ifdef __APPLE__
   // Is the CPU running emulated (for example macOS Rosetta running x86_64 code on M1 ARM (aarch64)
   static bool is_cpu_emulated();

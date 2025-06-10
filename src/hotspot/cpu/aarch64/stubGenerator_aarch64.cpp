@@ -41,6 +41,7 @@
 #include "oops/objArrayKlass.hpp"
 #include "oops/oop.inline.hpp"
 #include "prims/methodHandles.hpp"
+#include "runtime/arguments.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/continuation.hpp"
 #include "runtime/continuationEntry.inline.hpp"
@@ -8753,6 +8754,26 @@ class StubGenerator: public StubCodeGenerator {
       // We use generate_multiply() rather than generate_square()
       // because it's faster for the sizes of modulus we care about.
       StubRoutines::_montgomerySquare = g.generate_multiply();
+    }
+
+    // Load sve_sort library on supported hardware to enable SIMD sort and partition intrinsics
+    if (VM_Version::supports_sve2()) {
+      void *libsimdsort = nullptr;
+      char ebuf_[1024];
+      char dll_name_simd_sort[JVM_MAXPATHLEN];
+      if (os::dll_locate_lib(dll_name_simd_sort, sizeof(dll_name_simd_sort),
+                             Arguments::get_dll_dir(), "simdsort")) {
+        libsimdsort = os::dll_load(dll_name_simd_sort, ebuf_, sizeof ebuf_);
+      }
+      // Get addresses for SIMD sort and partition routines
+      if (libsimdsort != nullptr) {
+        log_info(library)("Loaded library %s, handle " INTPTR_FORMAT,
+                          JNI_LIB_PREFIX "simdsort" JNI_LIB_SUFFIX, p2i(libsimdsort));
+        snprintf(ebuf_, sizeof(ebuf_), "sve_sort");
+        StubRoutines::_array_sort = (address)os::dll_lookup(libsimdsort, ebuf_);
+        snprintf(ebuf_, sizeof(ebuf_), "sve_partition");
+        StubRoutines::_array_partition = (address)os::dll_lookup(libsimdsort, ebuf_);
+      }
     }
 #endif // COMPILER2
 

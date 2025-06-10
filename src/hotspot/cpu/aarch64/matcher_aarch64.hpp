@@ -195,6 +195,12 @@
 
   // Is SIMD sort supported for this CPU?
   static bool supports_simd_sort(BasicType bt) {
+    if (VM_Version::supports_sve_simdsort()) {
+        if(bt == T_INT || bt == T_FLOAT )
+            return true;
+        else
+            return false;
+    }
     return false;
   }
 
