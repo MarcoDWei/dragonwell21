@@ -1113,8 +1113,11 @@ void MacroAssembler::post_call_nop() {
   relocate(post_call_nop_Relocation::spec());
   InlineSkippedInstructionsCounter skipCounter(this);
   nop();
-  movk(zr, 0);
-  movk(zr, 0);
+
+  if(!DisablePCNMOVK) {
+    movk(zr, 0);
+    movk(zr, 0);
+  }
 }
 
 // these are no-ops overridden by InterpreterMacroAssembler

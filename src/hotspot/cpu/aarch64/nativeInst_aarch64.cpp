@@ -555,6 +555,10 @@ static bool is_movk_to_zr(uint32_t insn) {
 #endif
 
 void NativePostCallNop::patch(jint diff) {
+  if (DisablePCNMOVK) {
+    return;
+  }
+
 #ifdef ASSERT
   assert(diff != 0, "must be");
   uint32_t insn1 = uint_at(4);

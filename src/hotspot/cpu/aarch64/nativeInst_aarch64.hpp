@@ -682,6 +682,10 @@ inline NativeLdSt* NativeLdSt_at(address addr) {
 class NativePostCallNop: public NativeInstruction {
 public:
   bool check() const {
+    if (DisablePCNMOVK) {
+      return true;
+    }
+
     uint64_t insns = *(uint64_t*)addr_at(0);
     // Check for two instructions: nop; movk zr, xx
     // These instructions only ever appear together in a post-call
@@ -691,6 +695,10 @@ public:
   }
 
   jint displacement() const {
+    if (DisablePCNMOVK) {
+      // Forces slow path to call CodeCache::find_blob(pc) in find_blob_and_oopmap
+      return 0;
+    }
     uint64_t movk_insns = *(uint64_t*)addr_at(4);
     uint32_t lo = (movk_insns >> 5) & 0xffff;
     uint32_t hi = (movk_insns >> (5 + 32)) & 0xffff;
