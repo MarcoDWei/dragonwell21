@@ -971,14 +971,28 @@ void MacroAssembler::emit_static_call_stub() {
   isb();
   mov_metadata(rmethod, nullptr);
 
-  // Jump to the entry point of the c2i stub.
-  movptr(rscratch1, 0);
+  if (ReplaceMovWithAdrp) {
+    // Jump to the entry point of the c2i stub.
+    // We can use ADRP here because we know that the total size of
+    // the code cache cannot exceed 2Gb (ADRP limit is 4GB).
+    _adrp(rscratch1, pc());
+    add(rscratch1, rscratch1, 0);
+  } else {
+    // Jump to the entry point of the c2i stub.
+    movptr(rscratch1, 0);
+  }
   br(rscratch1);
 }
 
-int MacroAssembler::static_call_stub_size() {
-  // isb; movk; movz; movz; movk; movz; movz; br
-  return 8 * NativeInstruction::instruction_size;
+int MacroAssembler::static_call_stub_size() 
+{
+  if (ReplaceMovWithAdrp) {
+    // isb; movz; movk; movk; adrp; add; br
+    return 7 * NativeInstruction::instruction_size;
+  } else {
+    // isb; movz; movk; movk; movz; movk; movk; br
+    return 8 * NativeInstruction::instruction_size;
+  }
 }
 
 void MacroAssembler::c2bool(Register x) {
@@ -1752,13 +1766,34 @@ void MacroAssembler::null_check(Register reg, int offset) {
   }
 }
 
+bool MacroAssembler::is_relocated_within_codecache(relocInfo::relocType rtype) {
+  return (rtype == relocInfo::virtual_call_type ||
+          rtype == relocInfo::opt_virtual_call_type  ||
+          rtype == relocInfo::static_call_type ||
+          rtype == relocInfo::runtime_call_type || // No relocation expected for fixed external address
+          rtype == relocInfo::internal_word_type ||
+          rtype == relocInfo::section_word_type ||
+          rtype == relocInfo::external_word_type || // No relocation expected for fixed external address
+          rtype == relocInfo::runtime_call_w_cp_type || // No relocation expected for fixed external address
+          rtype == relocInfo::poll_type ||
+          rtype == relocInfo::poll_return_type);
+}
+
 // MacroAssembler protected routines needed to implement
 // public methods
 
 void MacroAssembler::mov(Register r, Address dest) {
   code_section()->relocate(pc(), dest.rspec());
-  uint64_t imm64 = (uint64_t)dest.target();
-  movptr(r, imm64);
+  bool reloc_in_codecache = MacroAssembler::is_relocated_within_codecache(dest.rspec().type());
+  if (ReplaceMovWithAdrp && reloc_in_codecache && is_adrp_reachable(dest.target())) {
+    uint64_t offset;
+    // We can use ADRP here because we know that the total size of
+    // the code cache cannot exceed 2Gb (ADRP limit is 4GB).
+    adrp(r, dest.target(), offset);
+    add(r, r, offset);
+  } else {
+    movptr(r, (uint64_t)dest.target());
+  }
 }
 
 // Move a constant pointer into r.  In AArch64 mode the virtual
@@ -5038,14 +5073,16 @@ address MacroAssembler::read_polling_page(Register r, relocInfo::relocType rtype
   return mark;
 }
 
-void MacroAssembler::adrp(Register reg1, const Address &dest, uint64_t &byte_offset) {
-  relocInfo::relocType rtype = dest.rspec().reloc()->type();
+bool MacroAssembler::is_adrp_reachable(const address target) {
   uint64_t low_page = (uint64_t)CodeCache::low_bound() >> 12;
   uint64_t high_page = (uint64_t)(CodeCache::high_bound()-1) >> 12;
-  uint64_t dest_page = (uint64_t)dest.target() >> 12;
+  uint64_t dest_page = (uint64_t)target >> 12;
   int64_t offset_low = dest_page - low_page;
   int64_t offset_high = dest_page - high_page;
+  return (offset_high >= -(1<<20) && offset_low < (1<<20));
+}
 
+void MacroAssembler::adrp(Register reg1, const Address &dest, uint64_t &byte_offset) {
   assert(is_valid_AArch64_address(dest.target()), "bad address");
   assert(dest.getMode() == Address::literal, "ADRP must be applied to a literal address");
 
@@ -5053,7 +5090,7 @@ void MacroAssembler::adrp(Register reg1, const Address &dest, uint64_t &byte_off
   code_section()->relocate(inst_mark(), dest.rspec());
   // 8143067: Ensure that the adrp can reach the dest from anywhere within
   // the code cache so that if it is relocated we know it will still reach
-  if (offset_high >= -(1<<20) && offset_low < (1<<20)) {
+  if (MacroAssembler::is_adrp_reachable(dest.target())) {
     _adrp(reg1, dest.target());
   } else {
     uint64_t target = (uint64_t)dest.target();

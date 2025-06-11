@@ -129,6 +129,8 @@ define_pd_global(intx, InlineSmallCode,          1000);
           "Branch Protection to use: none, standard, pac-ret")          \
   product(bool, DisablePCNMOVK, false, EXPERIMENTAL,                    \
           "Disable PCN movk instructions.")                             \
+  product(bool, ReplaceMovWithAdrp, false, EXPERIMENTAL,                \
+          "Replace movz+movk+movk with adrp+add.")                      \
 
 // end of ARCH_FLAGS
 

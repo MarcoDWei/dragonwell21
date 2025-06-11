@@ -506,6 +506,23 @@ void NativeGeneralJump::insert_unconditional(address code_pos, address entry) {
   ICache::invalidate_range(code_pos, instruction_size);
 }
 
+void NativeOptoJump::verify() {  }
+
+void NativeOptoJump::insert_unconditional(address code_pos, address entry) {
+  CodeBuffer cb(code_pos, instruction_size);
+  MacroAssembler a(&cb);
+
+  uint64_t offset;
+  // We can use ADRP here because we know that the total size of
+  // the code cache cannot exceed 2Gb (ADRP limit is 4GB).
+  assert(MacroAssembler::is_adrp_reachable(entry), "The target address of native general jump should be within codecache");
+  a.adrp(rscratch1, entry, offset);
+  a.add(rscratch1, rscratch1, offset);
+  a.br(rscratch1);
+
+  ICache::invalidate_range(code_pos, instruction_size);
+}
+
 // MT-safe patching of a long jump instruction.
 void NativeGeneralJump::replace_mt_safe(address instr_addr, address code_buffer) {
   ShouldNotCallThis();

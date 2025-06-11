@@ -495,6 +495,22 @@ inline NativeGeneralJump* nativeGeneralJump_at(address address) {
   return jump;
 }
 
+class NativeOptoJump: public NativeJump {
+public:
+  enum AArch64_specific_constants {
+    instruction_size = 3 * 4
+  };
+
+  static void insert_unconditional(address code_pos, address entry);
+  static void verify();
+};
+
+inline NativeOptoJump* nativeOptoJump_at(address address) {
+  NativeOptoJump* jump = (NativeOptoJump*)(address);
+  DEBUG_ONLY(jump->verify());
+  return jump;
+}
+
 class NativeGotJump: public NativeInstruction {
 public:
   enum AArch64_specific_constants {

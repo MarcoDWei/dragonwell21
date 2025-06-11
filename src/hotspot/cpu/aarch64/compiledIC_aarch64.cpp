@@ -102,13 +102,22 @@ void CompiledDirectStaticCall::set_to_interpreted(const methodHandle& callee, ad
     = nativeMovConstReg_at(stub + NativeInstruction::instruction_size);
 
 #ifdef ASSERT
-  NativeGeneralJump* jump = nativeGeneralJump_at(method_holder->next_instruction_address());
+  NativeJump* jump = nullptr;
+  if (ReplaceMovWithAdrp) {
+    jump = nativeOptoJump_at(method_holder->next_instruction_address());
+  } else {
+    jump = nativeGeneralJump_at(method_holder->next_instruction_address());
+  }
   verify_mt_safe(callee, entry, method_holder, jump);
 #endif
 
   // Update stub.
   method_holder->set_data((intptr_t)callee());
-  NativeGeneralJump::insert_unconditional(method_holder->next_instruction_address(), entry);
+  if (ReplaceMovWithAdrp) {
+    NativeOptoJump::insert_unconditional(method_holder->next_instruction_address(), entry);
+  } else {
+    NativeGeneralJump::insert_unconditional(method_holder->next_instruction_address(), entry);
+  }
   ICache::invalidate_range(stub, to_interp_stub_size());
   // Update jump to call.
   set_destination_mt_safe(stub);

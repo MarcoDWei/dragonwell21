@@ -1388,6 +1388,8 @@ public:
 
   address read_polling_page(Register r, relocInfo::relocType rtype);
   void get_polling_page(Register dest, relocInfo::relocType rtype);
+  static bool is_relocated_within_codecache(relocInfo::relocType rtype);
+  static bool is_adrp_reachable(const address dest);
 
   // CRC32 code for java.util.zip.CRC32::updateBytes() intrinsic.
   void update_byte_crc32(Register crc, Register val, Register table);
