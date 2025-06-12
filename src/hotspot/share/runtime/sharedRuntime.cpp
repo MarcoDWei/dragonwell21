@@ -81,6 +81,9 @@
 #ifdef COMPILER1
 #include "c1/c1_Runtime1.hpp"
 #endif
+#ifdef COMPILER2
+#include "opto/runtime.hpp"
+#endif
 
 // Shared stub locations
 RuntimeStub*        SharedRuntime::_wrong_method_blob;
@@ -509,6 +512,13 @@ address SharedRuntime::raw_exception_handler_for_return_address(JavaThread* curr
       // The deferred StackWatermarkSet::after_unwind check will be performed in
       // * OptoRuntime::handle_exception_C_helper for C2 code
       // * exception_handler_for_pc_helper via Runtime1::handle_exception_from_callee_id for C1 code
+#if defined(AARCH64) && defined(LINUX)
+#ifdef COMPILER2
+      if (ExceptionHandlerStubCodeBypass && nm->compiler_type() == compiler_c2) {
+        return OptoRuntime::exception_blob()->entry_point();
+      }
+#endif // COMPILER2
+#endif // AARCH64 && LINUX
       return nm->exception_begin();
     }
   }

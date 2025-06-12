@@ -553,6 +553,7 @@
 #define AARCH64_PORT_ONLY(code)
 #endif
 
+#define LINUX_AARCH64_ONLY(x) LINUX_ONLY(AARCH64_ONLY(x))
 #define MACOS_AARCH64_ONLY(x) MACOS_ONLY(AARCH64_ONLY(x))
 
 #if defined(RISCV32) || defined(RISCV64)

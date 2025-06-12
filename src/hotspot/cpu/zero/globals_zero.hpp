@@ -37,6 +37,7 @@ define_pd_global(bool,  TrapBasedNullChecks,  false);
 define_pd_global(bool,  UncommonNullCast,     true);
 
 define_pd_global(bool, DeoptHandlerCodeUsingTrap, false);
+define_pd_global(bool, ExceptionHandlerStubCodeBypass, false);
 
 define_pd_global(bool,  DelayCompilerStubsGeneration, false); // Don't have compiler's stubs
 

@@ -941,11 +941,23 @@ nmethod::nmethod(
 #endif
     {
       // Exception handler and deopt handler are in the stub section
+#if defined(AARCH64) && defined(LINUX)
+      if (offsets->value(CodeOffsets::Exceptions) != -1) {
+        _exception_offset = _stub_offset + offsets->value(CodeOffsets::Exceptions);
+      } else {
+        assert(ExceptionHandlerStubCodeBypass, "Exception handler is missing.");
+        _exception_offset = -1;
+      }
+#else // !AARCH64 || !LINUX
+      assert(!ExceptionHandlerStubCodeBypass, "Not implemented.");
       assert(offsets->value(CodeOffsets::Exceptions) != -1, "must be set");
-      assert(offsets->value(CodeOffsets::Deopt     ) != -1, "must be set");
 
       _exception_offset       = _stub_offset          + offsets->value(CodeOffsets::Exceptions);
+#endif // !AARCH64 || !LINUX
+
+      assert(offsets->value(CodeOffsets::Deopt     ) != -1, "must be set");
       _deopt_handler_begin    = (address) this + _stub_offset          + offsets->value(CodeOffsets::Deopt);
+
       if (offsets->value(CodeOffsets::DeoptMH) != -1) {
         _deopt_mh_handler_begin  = (address) this + _stub_offset          + offsets->value(CodeOffsets::DeoptMH);
       } else {

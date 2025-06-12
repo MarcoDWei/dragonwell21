@@ -962,6 +962,9 @@ const int ObjectAlignmentInBytes = 8;
   product_pd(bool, DeoptHandlerCodeUsingTrap, false,                        \
           "Implement deopt handler code using a trapping instruction")      \
                                                                             \
+  product_pd(bool, ExceptionHandlerStubCodeBypass, false,                   \
+          "Bypass exception handler stub code in C2")                       \
+                                                                            \
   product_pd(bool, TrapBasedNullChecks,                                     \
           "Generate code for null checks that uses a cmp and trap "         \
           "instruction raising SIGTRAP.  This is only used if an access to" \
