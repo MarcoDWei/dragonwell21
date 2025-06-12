@@ -75,8 +75,10 @@ friend class ArrayCopyStub;
     //            CompiledStaticCall::to_trampoline_stub_size()
     _call_stub_size = 13 * NativeInstruction::instruction_size,
     _exception_handler_size = DEBUG_ONLY(1*K) NOT_DEBUG(175),
-    _deopt_handler_size = 7 * NativeInstruction::instruction_size
+    _deopt_handler_size = 7 * NativeInstruction::instruction_size,
+    _deopt_handler_trap_size = 1 * NativeInstruction::instruction_size
   };
+
 
 public:
 

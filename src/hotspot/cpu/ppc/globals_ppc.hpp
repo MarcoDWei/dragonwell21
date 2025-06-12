@@ -38,6 +38,8 @@ define_pd_global(bool, UncommonNullCast,      true);  // Uncommon-trap nulls pas
 
 define_pd_global(bool, DelayCompilerStubsGeneration, COMPILER2_OR_JVMCI);
 
+define_pd_global(bool, DeoptHandlerCodeUsingTrap, false);
+
 #define DEFAULT_STACK_YELLOW_PAGES (2)
 #define DEFAULT_STACK_RED_PAGES (1)
 // Java_java_net_SocketOutputStream_socketWrite0() uses a 64k buffer on the

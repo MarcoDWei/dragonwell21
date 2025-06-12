@@ -42,6 +42,8 @@ define_pd_global(uintx, CodeCacheSegmentSize,    64 COMPILER1_AND_COMPILER2_PRES
 define_pd_global(intx, CodeEntryAlignment,       64);
 define_pd_global(intx, OptoLoopAlignment,        16);
 
+define_pd_global(bool, DeoptHandlerCodeUsingTrap, false);
+
 #define DEFAULT_STACK_YELLOW_PAGES (2)
 #define DEFAULT_STACK_RED_PAGES (1)
 // Java_java_net_SocketOutputStream_socketWrite0() uses a 64k buffer on the

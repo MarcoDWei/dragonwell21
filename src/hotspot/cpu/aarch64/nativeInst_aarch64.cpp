@@ -593,7 +593,7 @@ void NativeDeoptInstruction::verify() {
 }
 
 // Inserts an undefined instruction at a given pc
-void NativeDeoptInstruction::insert(address code_pos) {
+void NativeDeoptInstruction::insert(address code_pos, bool invalidate) {
   // 1 1 0 1 | 0 1 0 0 | 1 0 1 imm16 0 0 0 0 1
   // d       | 4       | a      | de | 0 | 0 |
   // 0xd4, 0x20, 0x00, 0x00
@@ -604,5 +604,7 @@ void NativeDeoptInstruction::insert(address code_pos) {
   *(code_pos+1) = 0x60;
   *(code_pos+2) = 0x00;
   *(code_pos+3) = 0x00;*/
-  ICache::invalidate_range(code_pos, 4);
+  if (invalidate) {
+    ICache::invalidate_range(code_pos, 4);
+  }
 }

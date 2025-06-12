@@ -1162,8 +1162,13 @@ class HandlerImpl {
   }
 
   static uint size_deopt_handler() {
-    // count one adr and one far branch instruction
-    return NativeInstruction::instruction_size + MacroAssembler::far_codestub_branch_size();
+    if (DeoptHandlerCodeUsingTrap) {
+      // count one deopt instruction
+      return NativeInstruction::instruction_size;
+    } else {
+      // count one adr and one far branch instruction
+      return NativeInstruction::instruction_size + MacroAssembler::far_codestub_branch_size();
+    }
   }
 };
 
@@ -2283,8 +2288,14 @@ int HandlerImpl::emit_deopt_handler(CodeBuffer& cbuf)
   }
   int offset = __ offset();
 
-  __ adr(lr, __ pc());
-  __ far_jump(RuntimeAddress(SharedRuntime::deopt_blob()->unpack()));
+  if (DeoptHandlerCodeUsingTrap) {
+    address pc_entry = __ pc();
+    __ brk(1);
+    NativeDeoptInstruction::insert(pc_entry, false);
+  } else {
+    __ adr(lr, __ pc());
+    __ far_jump(RuntimeAddress(SharedRuntime::deopt_blob()->unpack()));
+  }
 
   assert(__ offset() - offset == (int) size_deopt_handler(), "overflow");
   __ end_a_stub();

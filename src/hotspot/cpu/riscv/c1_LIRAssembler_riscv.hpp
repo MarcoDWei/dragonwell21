@@ -77,7 +77,8 @@ private:
     // See emit_deopt_handler for detail
     // auipc (1) + far_jump (6 or 2)
     _deopt_handler_size = 1 * NativeInstruction::instruction_size +
-                          6 * NativeInstruction::instruction_size // or smaller
+                          6 * NativeInstruction::instruction_size, // or smaller
+    _deopt_handler_trap_size = _deopt_handler_size,
   };
 
   void check_conflict(ciKlass* exact_klass, intptr_t current_klass, Register tmp,

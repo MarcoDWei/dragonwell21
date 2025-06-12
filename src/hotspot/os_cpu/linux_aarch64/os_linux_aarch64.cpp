@@ -98,6 +98,10 @@ void os::Posix::ucontext_set_pc(ucontext_t * uc, address pc) {
   uc->uc_mcontext.pc = (intptr_t)pc;
 }
 
+void os::Posix::ucontext_set_lr(ucontext_t * uc, address lr) {
+  uc->uc_mcontext.regs[REG_LR] = (intptr_t)lr;
+}
+
 intptr_t* os::Linux::ucontext_get_sp(const ucontext_t * uc) {
   return (intptr_t*)uc->uc_mcontext.sp;
 }

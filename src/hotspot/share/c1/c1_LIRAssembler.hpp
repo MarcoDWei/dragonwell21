@@ -271,7 +271,11 @@ class LIR_Assembler: public CompilationResourceObj {
   }
 
   static int deopt_handler_size() {
-    return _deopt_handler_size;
+    if (DeoptHandlerCodeUsingTrap) {
+      return _deopt_handler_trap_size;
+    } else {
+      return _deopt_handler_size;
+    }
   }
 };
 

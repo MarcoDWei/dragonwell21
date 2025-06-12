@@ -698,6 +698,11 @@ inline NativeLdSt* NativeLdSt_at(address addr) {
 class NativePostCallNop: public NativeInstruction {
 public:
   bool check() const {
+    if (!is_nop()) {
+      // This can be the last instruction of a CodeBlob - accessing beyond it would be invalid.
+      return false;
+    }
+      
     if (DisablePCNMOVK) {
       return true;
     }
@@ -760,7 +765,7 @@ class NativeDeoptInstruction: public NativeInstruction {
   }
 
   // MT-safe patching
-  static void insert(address code_pos);
+  static void insert(address code_pos, bool invalidate = true);
 };
 
 #endif // CPU_AARCH64_NATIVEINST_AARCH64_HPP

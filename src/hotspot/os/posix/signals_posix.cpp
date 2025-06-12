@@ -621,17 +621,48 @@ int JVM_HANDLE_XXX_SIGNAL(int sig, siginfo_t* info,
       if (cb != nullptr && cb->is_compiled()) {
         MACOS_AARCH64_ONLY(ThreadWXEnable wx(WXWrite, t);) // can call PcDescCache::add_pc_desc
         CompiledMethod* cm = cb->as_compiled_method();
-        assert(cm->insts_contains_inclusive(pc), "");
-        address deopt = cm->is_method_handle_return(pc) ?
-          cm->deopt_mh_handler_begin() :
-          cm->deopt_handler_begin();
-        assert(deopt != nullptr, "");
+#if defined(AARCH64) && defined(LINUX)
+        if (DeoptHandlerCodeUsingTrap) {
+          if (cm->compiler_type() == compiler_c1 || cm->compiler_type() == compiler_c2) {
+            address deopt = nullptr;
+            if (cm->is_deopt_entry(pc) || cm->is_deopt_mh_entry(pc)) {
+              assert(cm->stub_contains(pc), "");
+              deopt = pc;
+            } else {
+              assert(cm->insts_contains_inclusive(pc), "");
+              deopt = cm->is_method_handle_return(pc) ?
+              cm->deopt_mh_handler_begin() :
+              cm->deopt_handler_begin();
 
-        frame fr = os::fetch_frame_from_context(uc);
-        cm->set_original_pc(&fr, pc);
+              frame fr = os::fetch_frame_from_context(uc);
+              cm->set_original_pc(&fr, pc);
+            }
 
-        os::Posix::ucontext_set_pc(uc, deopt);
-        signal_was_handled = true;
+            assert(deopt != nullptr, "");
+
+            os::Posix::ucontext_set_lr(uc, deopt);
+            os::Posix::ucontext_set_pc(uc, SharedRuntime::deopt_blob()->unpack());
+
+            signal_was_handled = true;
+          }
+        }
+#else // !AARCH64 || !LINUX
+        assert(!DeoptHandlerCodeUsingTrap, "Not implemented.");
+#endif // !AARCH64 || !LINUX
+
+        if (!signal_was_handled) {
+          assert(cm->insts_contains_inclusive(pc), "");
+          address deopt = cm->is_method_handle_return(pc) ?
+            cm->deopt_mh_handler_begin() :
+            cm->deopt_handler_begin();
+          assert(deopt != nullptr, "");
+
+          frame fr = os::fetch_frame_from_context(uc);
+          cm->set_original_pc(&fr, pc);
+
+          os::Posix::ucontext_set_pc(uc, deopt);
+          signal_was_handled = true;
+        }
       }
     }
   }

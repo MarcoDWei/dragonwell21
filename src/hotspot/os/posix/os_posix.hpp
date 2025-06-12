@@ -96,6 +96,8 @@ public:
   static address ucontext_get_pc(const ucontext_t* ctx);
   static void    ucontext_set_pc(ucontext_t* ctx, address pc);
 
+  static void    ucontext_set_lr(ucontext_t* ctx, address lr);
+
   static void to_RTC_abstime(timespec* abstime, int64_t millis);
 
   static bool handle_stack_overflow(JavaThread* thread, address addr, address pc,

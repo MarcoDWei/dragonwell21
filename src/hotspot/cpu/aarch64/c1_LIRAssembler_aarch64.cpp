@@ -475,8 +475,16 @@ int LIR_Assembler::emit_deopt_handler() {
 
   int offset = code_offset();
 
-  __ adr(lr, pc());
-  __ far_jump(RuntimeAddress(SharedRuntime::deopt_blob()->unpack()));
+  if (DeoptHandlerCodeUsingTrap) {
+    address pc_entry = __ pc();
+
+    __ brk(1);
+    NativeDeoptInstruction::insert(pc_entry, false);
+  } else {
+    __ adr(lr, pc());
+    __ far_jump(RuntimeAddress(SharedRuntime::deopt_blob()->unpack()));
+  }
+
   guarantee(code_offset() - offset <= deopt_handler_size(), "overflow");
   __ end_a_stub();
 
